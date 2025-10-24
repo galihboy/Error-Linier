@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Playground Error Linier Interaktif</title>
+<script>
+    (function loadPlotly() {
+        const primary = document.createElement('script');
+        primary.src = 'https://cdn.plot.ly/plotly-2.32.0.min.js';
+        primary.onload = () => {
+            console.log('Plotly loaded from cdn.plot.ly');
+            if (window.__startPlotlyPlayground) {
+                window.__startPlotlyPlayground();
+            }
+        };
+        primary.onerror = () => {
+            console.warn('Gagal memuat Plotly dari cdn.plot.ly, mencoba jsDelivr...');
+            const fallback = document.createElement('script');
+            fallback.src = 'https://cdn.jsdelivr.net/npm/plotly.js@2.32.0/dist/plotly.min.js';
+            fallback.onload = () => {
+                console.log('Plotly loaded from jsDelivr');
+                if (window.__startPlotlyPlayground) {
+                    window.__startPlotlyPlayground();
+                }
+            };
+            fallback.onerror = () => {
+                console.error('Plotly gagal dimuat. Pastikan koneksi internet tersedia.');
+                const alertBox = document.createElement('div');
+                alertBox.textContent = 'Plotly gagal dimuat. Periksa koneksi internet atau coba gunakan jaringan berbeda.';
+                alertBox.style.background = '#fee2e2';
+                alertBox.style.color = '#b91c1c';
+                alertBox.style.padding = '12px';
+                alertBox.style.borderRadius = '8px';
+                alertBox.style.marginBottom = '12px';
+                document.body.prepend(alertBox);
+            };
+            document.head.appendChild(fallback);
+        };
+        document.head.appendChild(primary);
+    })();
+</script>
+<style>
+    :root {
+        color-scheme: light dark;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 16px;
+    }
+    body {
+        margin: 0;
+        padding: 1.5rem;
+        background: var(--page-bg, #f6f6f8);
+        color: #111827;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    h1 {
+        margin: 0;
+        font-size: 1.8rem;
+    }
+    header.hero {
+        width: 100%;
+        padding: clamp(1.5rem, 4vw, 2.75rem);
+        border-radius: 1rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(236, 72, 153, 0.18));
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    header.hero h1 {
+        font-size: clamp(1.9rem, 4vw, 2.7rem);
+        font-weight: 700;
+        color: #0f172a;
+    }
+    header.hero p {
+        margin: 0;
+        line-height: 1.6;
+        max-width: 960px;
+        font-size: 1rem;
+        color: #1f2937;
+    }
+    main.dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+    .controls-row .card {
+        flex: 1 1 320px;
+    }
+    .plot-row .card {
+        flex: 1 1 100%;
+    }
+    .plot-card {
+        padding: 1rem;
+    }
+    .plot-card #plot {
+        width: 100%;
+        height: 480px;
+    }
+    .results-row .card {
+        flex: 1 1 320px;
+    }
+    .formula-row .card {
+        flex: 1 1 100%;
+    }
+    .card {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .card h2 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    .controls-grid {
+        display: grid;
+        gap: 0.75rem;
+    }
+    .slider-row {
+        display: grid;
+        grid-template-columns: minmax(72px, 100px) 1fr 68px;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    label {
+        font-size: 0.85rem;
+        color: #374151;
+    }
+    input[type="range"] {
+        width: 100%;
+    }
+    input[type="number"] {
+        width: 100%;
+        padding: 0.35rem;
+        font-size: 0.85rem;
+        border: 1px solid rgba(100, 116, 139, 0.4);
+        border-radius: 0.4rem;
+        background: rgba(255, 255, 255, 0.9);
+        color: inherit;
+    }
+    input[type="number"]:focus {
+        outline: 2px solid rgba(59, 130, 246, 0.35);
+        border-color: rgba(59, 130, 246, 0.35);
+    }
+    #summary,
+    #step-detail,
+    #formula-box {
+        font-size: 0.92rem;
+        line-height: 1.55;
+    }
+    .card code {
+        background: rgba(15, 23, 42, 0.08);
+        padding: 0 0.35rem;
+        border-radius: 0.35rem;
+        font-size: 0.84rem;
+    }
+    .step-row {
+        padding: 0.65rem 0;
+        border-bottom: 1px dashed rgba(148, 163, 184, 0.45);
+    }
+    .step-row:last-child {
+        border-bottom: none;
+    }
+    .formula-line {
+        margin-bottom: 0.45rem;
+    }
+    footer {
+        border-top: 1px solid rgba(148, 163, 184, 0.35);
+        padding: 1.25rem 0 0.75rem 0;
+        color: #4b5563;
+    }
+    .footer-content {
+        max-width: 960px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.65rem;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    .footer-links {
+        display: flex;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .footer-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.06);
+        color: #1f2937;
+        text-decoration: none;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    .footer-links a:hover {
+        background: rgba(59, 130, 246, 0.15);
+        color: #0f172a;
+        transform: translateY(-1px);
+    }
+    .footer-links svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+    }
+    @media (prefers-color-scheme: dark) {
+        body {
+            --page-bg: #0f172a;
+            color: #f3f4f6;
+        }
+        header.hero {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.28));
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.4);
+        }
+        header.hero h1,
+        header.hero p {
+            color: #e2e8f0;
+        }
+        .card {
+            background: rgba(17, 24, 39, 0.88);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+        }
+        label {
+            color: #cbd5f5;
+        }
+        input[type="number"] {
+            background: rgba(30, 41, 59, 0.75);
+            border-color: rgba(148, 163, 184, 0.45);
+        }
+        .card code {
+            background: rgba(226, 232, 240, 0.18);
+        }
+        .step-row {
+            border-bottom: 1px dashed rgba(148, 163, 184, 0.35);
+        }
+        footer {
+            border-top-color: rgba(71, 85, 105, 0.6);
+            color: #cbd5f5;
+        }
+        .footer-links a {
+            background: rgba(15, 23, 42, 0.45);
+            color: #e0f2fe;
+        }
+        .footer-links a:hover {
+            background: rgba(59, 130, 246, 0.35);
+            color: #f8fafc;
+        }
+    }
+</style>
+</head>
+<body>
+    <header class="hero">
+        <h1>Playground Error Linier Interaktif</h1>
+        <p>Playground berbasis web ini membantu memvisualisasikan selisih (residual) tiga titik data terhadap sebuah garis linier dan menampilkan metrik error penting secara langsung.</p>
+        <p>Geser slider untuk memindahkan tiga titik data dan menyesuaikan garis referensi. Grafik serta ringkasan residual akan berubah secara real-time.</p>
+        <p>Dibuat oleh <strong>Galih Hermawan</strong> &middot; Program Studi Teknik Informatika &middot; Universitas Komputer Indonesia.</p>
+    </header>
+    <main class="dashboard">
+        <section class="row controls-row">
+            <div class="card">
+                <h2>Koordinat Titik</h2>
+                <div class="controls-grid" id="point-controls"></div>
+            </div>
+            <div class="card">
+                <h2>Garis Referensi</h2>
+                <div class="controls-grid" id="line-controls"></div>
+            </div>
+        </section>
+        <section class="row plot-row">
+            <div class="card plot-card">
+                <div id="plot"></div>
+            </div>
+        </section>
+        <section class="row results-row">
+            <div class="card summary-card">
+                <h2>Ringkasan Error</h2>
+                <div id="summary"></div>
+            </div>
+            <div class="card steps-card">
+                <h2>Langkah per Titik</h2>
+                <div id="step-detail"></div>
+            </div>
+        </section>
+        <section class="row formula-row">
+            <div class="card">
+                <h2>Rumus yang Digunakan</h2>
+                <div id="formula-box"></div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="footer-content">
+            <div>Galih Hermawan &middot; Program Studi Teknik Informatika &middot; Universitas Komputer Indonesia</div>
+            <div class="footer-links">
+                <a href="https://galih.eu" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7.19 1.27a1.1 1.1 0 0 1 1.62 0l5.54 6.2c.33.37.1.94-.38.94H12.6v4.65c0 .33-.27.6-.6.6H9.55c-.33 0-.6-.27-.6-.6V9.85H7.05v3.21c0 .33-.27.6-.6.6H3.39c-.33 0-.6-.27-.6-.6V8.41H1.03c-.48 0-.71-.57-.38-.94l5.54-6.2Z"/></svg>
+                    <span>galih.eu</span>
+                </a>
+                <a href="https://github.com/galihboy" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+                    <span>@galihboy</span>
+                </a>
+                <a href="https://github.com/Galih-Hermawan-Unikom" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+                    <span>@Galih-Hermawan-Unikom</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+<script>
+(function () {
+    function startPlayground() {
+        const pointsPanel = document.getElementById('point-controls');
+        const linePanel = document.getElementById('line-controls');
+        const summaryBox = document.getElementById('summary');
+        const stepBox = document.getElementById('step-detail');
+        const formulaBox = document.getElementById('formula-box');
+
+        if (!pointsPanel || !linePanel || !summaryBox || !stepBox || !formulaBox) {
+            console.error('Elemen playground tidak lengkap.');
+            return;
+        }
+
+        const defaultControls = [
+            { id: 'x1', label: 'x₁', min: -10, max: 10, step: 0.5, value: 1 },
+            { id: 'y1', label: 'y₁', min: -10, max: 10, step: 0.5, value: 2.5 },
+            { id: 'x2', label: 'x₂', min: -10, max: 10, step: 0.5, value: 3 },
+            { id: 'y2', label: 'y₂', min: -10, max: 10, step: 0.5, value: 3.8 },
+            { id: 'x3', label: 'x₃', min: -10, max: 10, step: 0.5, value: 5 },
+            { id: 'y3', label: 'y₃', min: -10, max: 10, step: 0.5, value: 4.1 },
+            { id: 'slope', label: 'Slope (m)', min: -3, max: 3, step: 0.1, value: 0.3 },
+            { id: 'intercept', label: 'Intercept (b)', min: -10, max: 10, step: 0.5, value: 2.5 }
+        ];
+
+        const state = Object.fromEntries(defaultControls.map(control => [control.id, control.value]));
+
+        function makeSlider(control) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'slider-row';
+
+            const label = document.createElement('label');
+            label.setAttribute('for', control.id);
+            label.textContent = control.label;
+
+            const range = document.createElement('input');
+            range.type = 'range';
+            range.id = `${control.id}-range`;
+            range.min = control.min;
+            range.max = control.max;
+            range.step = control.step;
+            range.value = control.value;
+
+            const number = document.createElement('input');
+            number.type = 'number';
+            number.id = control.id;
+            number.min = control.min;
+            number.max = control.max;
+            number.step = control.step;
+            number.value = control.value;
+
+            function sync(value) {
+                range.value = value;
+                number.value = value;
+                state[control.id] = parseFloat(value);
+                refresh();
+            }
+
+            range.addEventListener('input', event => sync(event.target.value));
+            number.addEventListener('input', event => {
+                const value = event.target.value;
+                if (value === '') {
+                    return;
+                }
+                sync(value);
+            });
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(range);
+            wrapper.appendChild(number);
+            return wrapper;
+        }
+
+        const pointControls = defaultControls.slice(0, 6);
+        const lineControls = defaultControls.slice(6);
+
+        pointControls.forEach(control => {
+            pointsPanel.appendChild(makeSlider(control));
+        });
+        lineControls.forEach(control => {
+            linePanel.appendChild(makeSlider(control));
+        });
+
+        formulaBox.innerHTML = [
+            '<div class="formula-line"><code>y_garis = m · x + b</code> — prediksi nilai di garis.</div>',
+            '<div class="formula-line"><code>Δ = y - y_garis</code> — residual/selisih vertikal.</div>',
+            '<div class="formula-line"><code>|Δ|</code> = nilai absolut residual.</div>',
+            '<div class="formula-line"><code>Δ²</code> = residual kuadrat.</div>',
+            '<div class="formula-line"><code>MAE = (1/n) Σ |Δ|</code> — mean absolute error.</div>',
+            '<div class="formula-line"><code>MSE = (1/n) Σ Δ²</code> — mean squared error.</div>',
+            '<div class="formula-line"><code>RMSE = √MSE</code>.</div>',
+            '<div class="formula-line"><code>MAPE = (100/n) Σ |Δ / y|</code> — jika semua y ≠ 0.</div>'
+        ].join('');
+
+        function computeData() {
+            const xs = [state.x1, state.x2, state.x3];
+            const ys = [state.y1, state.y2, state.y3];
+            const slope = state.slope;
+            const intercept = state.intercept;
+
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const span = maxX - minX || 1;
+            const padding = Math.max(1.5, 0.2 * span);
+            const xMin = minX - padding;
+            const xMax = maxX + padding;
+
+            const lineXs = Array.from({ length: 200 }, (_, idx) => xMin + (idx / 199) * (xMax - xMin));
+            const lineYs = lineXs.map(x => slope * x + intercept);
+
+            const lineTrace = {
+                x: lineXs,
+                y: lineYs,
+                mode: 'lines',
+                name: 'Garis referensi',
+                line: { color: 'darkorange', width: 3 }
+            };
+            const scatterTrace = {
+                x: xs,
+                y: ys,
+                mode: 'markers',
+                name: 'Titik data',
+                marker: { color: 'royalblue', size: 12 }
+            };
+
+            const residualTraces = [];
+            const rows = [];
+
+            xs.forEach((x, index) => {
+                const y = ys[index];
+                const yLine = slope * x + intercept;
+                const error = y - yLine;
+                const absError = Math.abs(error);
+                const sqError = error * error;
+                const percentError = Math.abs(y) > 1e-9 ? absError / Math.abs(y) : null;
+
+                rows.push({ index: index + 1, x, y, yLine, error, absError, sqError, percentError });
+                residualTraces.push({
+                    x: [x, x],
+                    y: [yLine, y],
+                    mode: 'lines',
+                    name: 'Residual',
+                    line: { color: 'gray', dash: 'dash' },
+                    hoverinfo: 'skip',
+                    showlegend: index === 0
+                });
+            });
+
+            return { lineTrace, scatterTrace, residualTraces, rows };
+        }
+
+        function refresh() {
+            const slope = state.slope;
+            const intercept = state.intercept;
+            const { lineTrace, scatterTrace, residualTraces, rows } = computeData();
+
+            Plotly.react('plot', [scatterTrace, lineTrace, ...residualTraces], {
+                margin: { l: 48, r: 20, t: 48, b: 48 },
+                legend: { x: 0.02, y: 0.98 },
+                title: 'Residual vertikal terhadap garis linier',
+                xaxis: { title: 'x' },
+                yaxis: { title: 'y' },
+                annotations: rows.map(row => ({
+                    x: row.x,
+                    y: (row.y + row.yLine) / 2,
+                    text: `Δ=${row.error.toFixed(2)}`,
+                    showarrow: false,
+                    font: { size: 12, color: '#111' },
+                    bgcolor: 'rgba(255,255,255,0.7)'
+                }))
+            }, { responsive: true, displaylogo: false });
+
+            const totalAbs = rows.reduce((acc, row) => acc + row.absError, 0);
+            const totalSq = rows.reduce((acc, row) => acc + row.sqError, 0);
+            const mae = totalAbs / rows.length;
+            const mse = totalSq / rows.length;
+            const rmse = Math.sqrt(mse);
+            const percentRows = rows.filter(row => row.percentError !== null);
+            const mape = percentRows.length === rows.length
+                ? (percentRows.reduce((acc, row) => acc + row.percentError, 0) / rows.length) * 100
+                : null;
+
+            const summaryLines = [
+                `<code>Σ|Δ|</code> = ${totalAbs.toFixed(3)}`,
+                `<code>ΣΔ²</code> = ${totalSq.toFixed(4)}`,
+                `<code>MAE</code> = ${mae.toFixed(3)}`,
+                `<code>MSE</code> = ${mse.toFixed(4)}`,
+                `<code>RMSE</code> = ${rmse.toFixed(3)}`
+            ];
+            if (mape !== null && Number.isFinite(mape)) {
+                summaryLines.push(`<code>MAPE</code> = ${mape.toFixed(2)}%`);
+            } else {
+                summaryLines.push('<code>MAPE</code> tidak dihitung karena ada y = 0.');
+            }
+            summaryBox.innerHTML = summaryLines.map(line => `<div>${line}</div>`).join('');
+
+            const detailHtml = rows.map(row => {
+                const steps = [
+                    `<strong>Titik ${row.index}</strong>`,
+                    `y_garis = m · x + b = ${slope.toFixed(2)} · ${row.x.toFixed(2)} + ${intercept.toFixed(2)} = ${row.yLine.toFixed(3)}`,
+                    `Δ = y - y_garis = ${row.y.toFixed(2)} - ${row.yLine.toFixed(2)} = ${row.error.toFixed(3)}`,
+                    `|Δ| = ${row.absError.toFixed(3)}, Δ² = ${row.sqError.toFixed(4)}`
+                ];
+                if (row.percentError !== null) {
+                    steps.push(`|Δ| / |y| = ${(row.percentError * 100).toFixed(2)}%`);
+                }
+                return `<div class="step-row">${steps.join('<br>')}</div>`;
+            }).join('');
+            stepBox.innerHTML = detailHtml;
+        }
+
+        refresh();
+        window.addEventListener('resize', refresh);
+    }
+
+    window.__startPlotlyPlayground = startPlayground;
+    if (window.Plotly) {
+        startPlayground();
+    }
+})();
+</script>
+</body>
+</html>
